@@ -2,6 +2,8 @@ import os
 import sys
 import code
 import numpy as np
+import subprocess
+from pptx import Presentation
 
 class Commit(object):
 	def __init__(self, author, date, commit_message):
@@ -9,16 +11,19 @@ class Commit(object):
 		self.date = date
 		self.commit_message = commit_message
 
+def getCommits(path):
+	os.chdir(path)
+	s = 'git whatchanged --since="30 days ago" > commits.txt'
+	subprocess.call(s, shell=True)
 
 
-with open("try.txt", "r") as f:
-    content = f.readlines()
+def buildCommits():
 
-lines = [line.rstrip('\n') for line in content]
+	with open("commits.txt", "r") as f:
+	    content = f.readlines()
 
+	lines = [line.rstrip('\n') for line in content]
 
-
-def buildCommits(lines):
 	commit = ""
 	author = ""
 	message = ""
@@ -61,12 +66,37 @@ def printCommits(allCommits):
 	for each in allCommits:
 		print each.author
 		print each.date
-		print ' '.join(each.commit_message.split())
+		print each.commit_message
 		print " "
 		print " "
 
+def buildPPTX(commits):
+	prs = Presentation()
+	title_slide_layout = prs.slide_layouts[0]
+	slide = prs.slides.add_slide(title_slide_layout)
+	title = slide.shapes.title
+	subtitle = slide.placeholders[1]
 
-allCommits = buildCommits(lines)
+	title.text = "Monthly Presentation"
+	subtitle.text = "Using git2ppt!"
+
+	prs.save('test.pptx')
+
+	for ii,each in enumerate(commits):
+		print ii
+		bullet_slide_layout = prs.slide_layouts[5]
+		slide = prs.slides.add_slide(bullet_slide_layout)
+		shapes = slide.shapes
+		title = slide.shapes.title
+		title.text = each.commit_message
+
+
+	prs.save('test.pptx')
+
+
+#gitCommits()
+allCommits = buildCommits()
 filtered = filterCommits(allCommits, "Michael")
 
 printCommits(filtered)
+buildPPTX(filtered)
