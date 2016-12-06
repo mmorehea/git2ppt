@@ -12,9 +12,13 @@ class Commit(object):
 		self.commit_message = commit_message
 
 def getCommits(path):
+	truePath = os.path.dirname(os.path.abspath(__file__))
+	#code.interact(local=locals())
 	os.chdir(path)
-	s = 'git whatchanged --since="30 days ago" > commits.txt'
+	s = 'git whatchanged --since="30 days ago" > ' + truePath + '/' + 'commits.txt'
 	subprocess.call(s, shell=True)
+	os.chdir(truePath)
+
 
 
 def buildCommits():
@@ -32,6 +36,7 @@ def buildCommits():
 	allCommits = []
 
 	for each in lines:
+		each = each.strip()
 		if len(each) == 0:
 			continue
 		if each.split()[0] == 'commit':
@@ -93,10 +98,19 @@ def buildPPTX(commits):
 
 	prs.save('test.pptx')
 
+def main():
+	if len(sys.argv) < 2:
+		print "git2ppt -- Written by Michael Morehead Nov. 2016"
+		print "usage: python git2ppt.py path/to/repo"
+	else:
+		pathToRepo = sys.argv[1]
+		getCommits(pathToRepo)
+		allCommits = buildCommits()
+		filtered = filterCommits(allCommits, "mmorehea")
 
-#gitCommits()
-allCommits = buildCommits()
-filtered = filterCommits(allCommits, "Michael")
+		printCommits(filtered)
+		buildPPTX(filtered)
 
-printCommits(filtered)
-buildPPTX(filtered)
+
+if __name__ == "__main__":
+    main()
